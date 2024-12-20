@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     let setLookBackHours = null;
     let reportDiv = null;
     let beginYear = null;
+    let beginYear_2 = null;
 
     reportDiv = "top10";
     setLocationCategory = "Basins";
@@ -16,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     setTimeseriesGroup2 = "Stage";
     setLookBackHours = subtractDaysFromDate(new Date(), 30);
     beginYear = new Date(`${begin}-01-01T00:00:00Z`);
+    beginYear_2 = new Date(`${begin_2}-01-01T00:00:00Z`);
 
     // Display the loading indicator for water quality alarm
     const loadingIndicator = document.getElementById(`loading_${reportDiv}`);
@@ -26,6 +28,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     console.log("setTimeseriesGroup1: ", setTimeseriesGroup1);
     console.log("setLookBackHours: ", setLookBackHours);
     console.log("beginYear: ", beginYear);
+    console.log("beginYear_2: ", beginYear_2);
 
     let setBaseUrl = null;
     if (cda === "internal") {
@@ -274,32 +277,32 @@ document.addEventListener('DOMContentLoaded', async function () {
                     combinedData.forEach(dataGroup => {
                         // Iterate over each assigned-location in the dataGroup
                         let locations = dataGroup['assigned-locations'];
-                    
+
                         // Loop through the locations array in reverse to safely remove items
                         for (let i = locations.length - 1; i >= 0; i--) {
                             let location = locations[i];
-                    
+
                             // Check if 'tsid-datman' or 'tsid-stage-rev' is null or undefined
                             let isLocationNull = location[`tsid-datman`] == null;
                             let isLocationNullStage = location[`tsid-stage-rev`] == null;
-                    
+
                             let matchesGage = false;
                             let matchesGage2 = false;
-                    
+
                             if (!isLocationNull) {
                                 matchesGage = location[`tsid-datman`][`assigned-time-series`]?.[0]?.[`timeseries-id`] === gage;
                             }
-                    
+
                             if (!isLocationNullStage) {
                                 matchesGage2 = location[`tsid-stage-rev`][`assigned-time-series`]?.[0]?.[`timeseries-id`] === gage_2;
                             }
-                    
+
                             if (isLocationNull || isLocationNullStage || !matchesGage || !matchesGage2) {
                                 // console.log(`Removing location with id ${location['location-id']}`);
                                 locations.splice(i, 1); // Remove the location from the array
                             }
                         }
-                    });                    
+                    });
 
                     console.log('Filtered all locations where tsid is null successfully:', combinedData);
 
@@ -318,18 +321,27 @@ document.addEventListener('DOMContentLoaded', async function () {
                             const stageRevTimeSeries = locData['tsid-stage-rev']?.['assigned-time-series'] || [];
 
                             // Function to create fetch promises for time series data
-                            const timeSeriesDataFetchPromises = (timeSeries, timeSeries2, type) => {
+                            const timeSeriesDataFetchPromises = (datmanTimeSeries, stageRevTimeSeries, type) => {
                                 // Combine both time series arrays with a type indicator
                                 const combinedTimeSeries = [
-                                    ...timeSeries.map(series => ({ ...series, seriesType: 'timeSeries' })),
-                                    ...timeSeries2.map(series => ({ ...series, seriesType: 'timeSeries2' }))
+                                    ...datmanTimeSeries.map(series => ({ ...series, seriesType: 'datmanTimeSeries' })),
+                                    ...stageRevTimeSeries.map(series => ({ ...series, seriesType: 'stageRevTimeSeries' }))
                                 ];
 
                                 return combinedTimeSeries.map((series, index) => {
                                     const tsid = series['timeseries-id'];
                                     console.log('tsid:', tsid);
-                                    const timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=80000&name=${tsid}&begin=${beginYear.toISOString()}&end=${currentDateTime.toISOString()}&office=${office}`;
-                                    // console.log('timeSeriesDataApiUrl:', timeSeriesDataApiUrl);
+                                    const version = series['timeseries-id'].split('.').pop();
+                                    console.log('version:', version);
+
+                                    let timeSeriesDataApiUrl = null;
+                                    if (version === "datman-rev") {
+                                        timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=1000000&name=${tsid}&begin=${beginYear.toISOString()}&end=${currentDateTime.toISOString()}&office=${office}`;
+                                        console.log('timeSeriesDataApiUrl:', timeSeriesDataApiUrl);
+                                    } else if (version === "lrgsShef-rev") {
+                                        timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=1000000&name=${tsid}&begin=${beginYear_2.toISOString()}&end=${currentDateTime.toISOString()}&office=${office}`;
+                                        console.log('timeSeriesDataApiUrl:', timeSeriesDataApiUrl);
+                                    }
 
                                     return fetch(timeSeriesDataApiUrl, {
                                         method: 'GET',
