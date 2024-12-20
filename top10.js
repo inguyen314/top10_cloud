@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     let setTimeseriesGroup2 = null;
     let setLookBackHours = null;
     let reportDiv = null;
+    let beginYear = null;
 
     reportDiv = "top10";
     setLocationCategory = "Basins";
@@ -14,6 +15,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     setTimeseriesGroup1 = "Datman";
     setTimeseriesGroup2 = "Stage";
     setLookBackHours = subtractDaysFromDate(new Date(), 30);
+    beginYear = new Date(`${begin}-01-01T00:00:00Z`);
 
     // Display the loading indicator for water quality alarm
     const loadingIndicator = document.getElementById(`loading_${reportDiv}`);
@@ -23,6 +25,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     console.log("setLocationGroupOwner: ", setLocationGroupOwner);
     console.log("setTimeseriesGroup1: ", setTimeseriesGroup1);
     console.log("setLookBackHours: ", setLookBackHours);
+    console.log("beginYear: ", beginYear);
 
     let setBaseUrl = null;
     if (cda === "internal") {
@@ -223,6 +226,88 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                     console.log('combinedData:', combinedData);
 
+                    // Step 1: Filter out locations where 'attribute' ends with '.1'
+                    combinedData.forEach((dataObj, index) => {
+                        // console.log(`Processing dataObj at index ${index}:`, dataObj['assigned-locations']);
+
+                        // Filter out locations with 'attribute' ending in '.1'
+                        dataObj['assigned-locations'] = dataObj['assigned-locations'].filter(location => {
+                            const attribute = location['attribute'].toString();
+                            if (attribute.endsWith('.1')) {
+                                // Log the location being removed
+                                // console.log(`Removing location with attribute '${attribute}' and id '${location['location-id']}' at index ${index}`);
+                                return false; // Filter out this location
+                            }
+                            return true; // Keep the location
+                        });
+
+                        // console.log(`Updated assigned-locations for index ${index}:`, dataObj['assigned-locations']);
+                    });
+
+                    console.log('Filtered all locations ending with .1 successfully:', combinedData);
+
+                    // Step 2: Filter out locations where 'location-id' doesn't match owner's 'assigned-locations'
+                    combinedData.forEach(dataGroup => {
+                        // Iterate over each assigned-location in the dataGroup
+                        let locations = dataGroup['assigned-locations'];
+
+                        // Loop through the locations array in reverse to safely remove items
+                        for (let i = locations.length - 1; i >= 0; i--) {
+                            let location = locations[i];
+
+                            // Find if the current location-id exists in owner's assigned-locations
+                            let matchingOwnerLocation = location['owner']['assigned-locations'].some(ownerLoc => {
+                                return ownerLoc['location-id'] === location['location-id'];
+                            });
+
+                            // If no match, remove the location
+                            if (!matchingOwnerLocation) {
+                                // console.log(`Removing location with id ${location['location-id']} as it does not match owner`);
+                                locations.splice(i, 1);
+                            }
+                        }
+                    });
+
+                    console.log('Filtered all locations by matching location-id with owner successfully:', combinedData);
+
+                    // Step 3: Filter out locations where 'tsid-datman' or 'tsid-stage-rev' is null
+                    combinedData.forEach(dataGroup => {
+                        // Iterate over each assigned-location in the dataGroup
+                        let locations = dataGroup['assigned-locations'];
+                    
+                        // Loop through the locations array in reverse to safely remove items
+                        for (let i = locations.length - 1; i >= 0; i--) {
+                            let location = locations[i];
+                    
+                            // Check if 'tsid-datman' or 'tsid-stage-rev' is null or undefined
+                            let isLocationNull = location[`tsid-datman`] == null;
+                            let isLocationNullStage = location[`tsid-stage-rev`] == null;
+                    
+                            let matchesGage = false;
+                            let matchesGage2 = false;
+                    
+                            if (!isLocationNull) {
+                                matchesGage = location[`tsid-datman`][`assigned-time-series`]?.[0]?.[`timeseries-id`] === gage;
+                            }
+                    
+                            if (!isLocationNullStage) {
+                                matchesGage2 = location[`tsid-stage-rev`][`assigned-time-series`]?.[0]?.[`timeseries-id`] === gage_2;
+                            }
+                    
+                            if (isLocationNull || isLocationNullStage || !matchesGage || !matchesGage2) {
+                                // console.log(`Removing location with id ${location['location-id']}`);
+                                locations.splice(i, 1); // Remove the location from the array
+                            }
+                        }
+                    });                    
+
+                    console.log('Filtered all locations where tsid is null successfully:', combinedData);
+
+                    // Step 4: Filter out basin where there are no gages
+                    combinedData = combinedData.filter(item => item['assigned-locations'] && item['assigned-locations'].length > 0);
+
+                    console.log('Filtered all basin where assigned-locations is null successfully:', combinedData);
+
                     const timeSeriesDataPromises = [];
 
                     // Iterate over all arrays in combinedData
@@ -242,7 +327,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                                 return combinedTimeSeries.map((series, index) => {
                                     const tsid = series['timeseries-id'];
-                                    const timeSeriesDataApiUrl = setBaseUrl + `timeseries?name=${tsid}&begin=${setLookBackHours.toISOString()}&end=${currentDateTime.toISOString()}&office=${office}`;
+                                    console.log('tsid:', tsid);
+                                    const timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=80000&name=${tsid}&begin=${beginYear.toISOString()}&end=${currentDateTime.toISOString()}&office=${office}`;
                                     // console.log('timeSeriesDataApiUrl:', timeSeriesDataApiUrl);
 
                                     return fetch(timeSeriesDataApiUrl, {
@@ -291,7 +377,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                                         });
                                 });
                             };
-
 
                             // Create promises for datman, stage-rev time series
                             const datmanPromises = timeSeriesDataFetchPromises(datmanTimeSeries, stageRevTimeSeries, 'datman');
@@ -393,78 +478,34 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                     console.log('All combinedData data fetched successfully:', combinedData);
 
-                    // Step 1: Filter out locations where 'attribute' ends with '.1'
-                    combinedData.forEach((dataObj, index) => {
-                        // console.log(`Processing dataObj at index ${index}:`, dataObj['assigned-locations']);
+                    const porMax = combinedData[0][`assigned-locations`][0][`datman-max-value`];
+                    console.log(combinedData[0][`assigned-locations`][0][`datman-max-value`]);
 
-                        // Filter out locations with 'attribute' ending in '.1'
-                        dataObj['assigned-locations'] = dataObj['assigned-locations'].filter(location => {
-                            const attribute = location['attribute'].toString();
-                            if (attribute.endsWith('.1')) {
-                                // Log the location being removed
-                                // console.log(`Removing location with attribute '${attribute}' and id '${location['location-id']}' at index ${index}`);
-                                return false; // Filter out this location
-                            }
-                            return true; // Keep the location
-                        });
+                    const tableBody = document.querySelector("#data-table tbody");
 
-                        // console.log(`Updated assigned-locations for index ${index}:`, dataObj['assigned-locations']);
+                    porMax.forEach(item => {
+                        const row = document.createElement("tr");
+
+                        // Create cells and append data
+                        const tsidCell = document.createElement("td");
+                        tsidCell.textContent = item.tsid;
+                        row.appendChild(tsidCell);
+
+                        const timestampCell = document.createElement("td");
+                        timestampCell.textContent = item.timestamp;
+                        row.appendChild(timestampCell);
+
+                        const valueCell = document.createElement("td");
+                        valueCell.textContent = item.value.toFixed(2); // Format to 2 decimal places
+                        row.appendChild(valueCell);
+
+                        const qualityCodeCell = document.createElement("td");
+                        qualityCodeCell.textContent = item.qualityCode;
+                        row.appendChild(qualityCodeCell);
+
+                        tableBody.appendChild(row);
                     });
 
-                    console.log('Filtered all locations ending with .1 successfully:', combinedData);
-
-                    // Step 2: Filter out locations where 'location-id' doesn't match owner's 'assigned-locations'
-                    combinedData.forEach(dataGroup => {
-                        // Iterate over each assigned-location in the dataGroup
-                        let locations = dataGroup['assigned-locations'];
-
-                        // Loop through the locations array in reverse to safely remove items
-                        for (let i = locations.length - 1; i >= 0; i--) {
-                            let location = locations[i];
-
-                            // Find if the current location-id exists in owner's assigned-locations
-                            let matchingOwnerLocation = location['owner']['assigned-locations'].some(ownerLoc => {
-                                return ownerLoc['location-id'] === location['location-id'];
-                            });
-
-                            // If no match, remove the location
-                            if (!matchingOwnerLocation) {
-                                // console.log(`Removing location with id ${location['location-id']} as it does not match owner`);
-                                locations.splice(i, 1);
-                            }
-                        }
-                    });
-
-                    console.log('Filtered all locations by matching location-id with owner successfully:', combinedData);
-
-                    // Step 3: Filter out locations where 'tsid-datman' is null
-                    combinedData.forEach(dataGroup => {
-                        // Iterate over each assigned-location in the dataGroup
-                        let locations = dataGroup['assigned-locations'];
-
-                        // Loop through the locations array in reverse to safely remove items
-                        for (let i = locations.length - 1; i >= 0; i--) {
-                            let location = locations[i];
-
-                            // console.log("tsid-datman: ", location[`tsid-datman`]);
-
-                            // Check if 'tsid-datman' is null or undefined
-                            let isLocationNull = location[`tsid-datman`] == null;
-
-                            // If tsid-datman is null, remove the location
-                            if (isLocationNull) {
-                                console.log(`Removing location with id ${location['location-id']}`);
-                                locations.splice(i, 1); // Remove the location from the array
-                            }
-                        }
-                    });
-
-                    console.log('Filtered all locations where tsid is null successfully:', combinedData);
-
-                    // Step 4: Filter out basin where there are no gages
-                    combinedData = combinedData.filter(item => item['assigned-locations'] && item['assigned-locations'].length > 0);
-
-                    console.log('Filtered all basin where assigned-locations is null successfully:', combinedData);
 
                     if (type === "top10") {
                         // const table = createTable(combinedData, type);
@@ -581,26 +622,31 @@ document.addEventListener('DOMContentLoaded', async function () {
         let maxValue = -Infinity; // Start with the smallest possible value
         let maxEntry = null; // Store the corresponding max entry (timestamp, value, quality code)
 
+        console.log("data: ", data);
+
         // Loop through the values array
         for (let i = 0; i < data.values.length; i++) {
-            // Check if the value at index i is not null
-            if (data.values[i][1] !== null) {
+            const currentValue = data.values[i][1];
+
+            // Check if the currentValue is neither null nor undefined
+            if (currentValue != null) { // This covers both null and undefined
                 // Update maxValue and maxEntry if the current value is greater
-                if (data.values[i][1] > maxValue) {
-                    maxValue = data.values[i][1];
+                if (currentValue > maxValue) {
+                    maxValue = currentValue;
                     maxEntry = {
                         tsid: tsid,
                         timestamp: data.values[i][0],
-                        value: data.values[i][1],
+                        value: currentValue,
                         qualityCode: data.values[i][2]
                     };
                 }
             }
         }
 
-        // Return the max entry (or null if no valid values were found)
+        // Return the max enty (or null if no valid values were found)
         return maxEntry;
     }
+
 
     function getMinValue(data, tsid) {
         let minValue = Infinity; // Start with the largest possible value

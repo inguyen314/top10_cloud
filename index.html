@@ -58,6 +58,20 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Include the Moment.js adapter for Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.0"></script>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
 </head>
 
 <body>
@@ -79,6 +93,20 @@
                             </h2>
                             <div class="box-content" style="background-color:white;margin:auto">
                                 <div class="content">
+                                    <table id="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>TSID</th>
+                                                <th>Timestamp</th>
+                                                <th>Por Max Value</th>
+                                                <th>Quality Code</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Rows will be inserted here -->
+                                        </tbody>
+                                    </table>
+
                                     <div id="loading_top10" style="display: none;"><img
                                             src="https://wm.mvs.ds.usace.army.mil/apps/alarms/images/loading4.gif"
                                             style='height: 50px; width: 50px;' alt="Loading..." /></div>
