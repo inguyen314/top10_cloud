@@ -365,6 +365,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                             const maxValueKey = type === 'datman' ? 'datman-max-value' : null;
                                             const minValueKey = type === 'datman' ? 'datman-min-value' : null;
                                             const yearlyValueKey = type === 'datman' ? 'datman-yearly-value' : null;
+                                            const yearlyMaxValueKey = type === 'datman' ? 'datman-yearly-max-value' : null;
 
                                             if (!apiDataKey || !lastValueKey || !maxValueKey || !minValueKey) {
                                                 console.error('Unknown type:', type);
@@ -376,6 +377,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                             locData[maxValueKey] = locData[maxValueKey] || [];
                                             locData[minValueKey] = locData[minValueKey] || [];
                                             locData[yearlyValueKey] = locData[yearlyValueKey] || [];
+                                            locData[yearlyMaxValueKey] = locData[yearlyMaxValueKey] || [];
 
                                             locData[apiDataKey].push(data);
 
@@ -384,11 +386,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                                             const maxValue = getMaxValue(data, tsid);
                                             const minValue = getMinValue(data, tsid);
                                             const yearlyValue = getYearlyValue(data, tsid);
+                                            const yearlyMaxValue = getYearlyMaxValue(data, tsid);
 
                                             locData[lastValueKey].push(lastValue);
                                             locData[maxValueKey].push(maxValue);
                                             locData[minValueKey].push(minValue);
                                             locData[yearlyValueKey].push(yearlyValue);
+                                            locData[yearlyMaxValueKey].push(yearlyMaxValue);
                                         })
                                         .catch(error => {
                                             console.error(`Error fetching additional data for location ${locData['location-id']} with TSID ${tsid}:`, error);
@@ -695,7 +699,45 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     
         return yearlyValues;
-    }    
+    }  
+    
+    function getYearlyMaxValue(data, tsid) {
+        const yearlyMax = {}; // Object to store the maximum value for each year
+    
+        // Loop through the values array
+        for (let i = 0; i < data.values.length; i++) {
+            const entry = data.values[i];
+            const timestamp = entry[0];
+            const value = entry[1];
+            const qualityCode = entry[2];
+    
+            // Parse the year from the timestamp
+            const year = new Date(timestamp).getFullYear();
+    
+            // Skip entries with null or undefined values
+            if (value != null) {
+                // Initialize the max for the year if not already present
+                if (!yearlyMax[year]) {
+                    yearlyMax[year] = { value: -Infinity, entry: null };
+                }
+    
+                // Update the maximum value for the year if needed
+                if (value > yearlyMax[year].value) {
+                    yearlyMax[year] = {
+                        value: value,
+                        entry: {
+                            tsid: tsid,
+                            timestamp: timestamp,
+                            value: value,
+                            qualityCode: qualityCode
+                        }
+                    };
+                }
+            }
+        }
+    
+        return yearlyMax;
+    }
 
     function getMinValue(data, tsid) {
         let minValue = Infinity; // Start with the largest possible value
