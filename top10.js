@@ -357,11 +357,14 @@ document.addEventListener('DOMContentLoaded', async function () {
                                                 });
                                             }
 
+                                            // console.log("data: ", data);
+
                                             // Handle type-specific logic
                                             const apiDataKey = type === 'datman' ? 'datman-api-data' : null;
                                             const lastValueKey = type === 'datman' ? 'datman-last-value' : null;
                                             const maxValueKey = type === 'datman' ? 'datman-max-value' : null;
                                             const minValueKey = type === 'datman' ? 'datman-min-value' : null;
+                                            const yearlyValueKey = type === 'datman' ? 'datman-yearly-value' : null;
 
                                             if (!apiDataKey || !lastValueKey || !maxValueKey || !minValueKey) {
                                                 console.error('Unknown type:', type);
@@ -372,6 +375,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                             locData[lastValueKey] = locData[lastValueKey] || [];
                                             locData[maxValueKey] = locData[maxValueKey] || [];
                                             locData[minValueKey] = locData[minValueKey] || [];
+                                            locData[yearlyValueKey] = locData[yearlyValueKey] || [];
 
                                             locData[apiDataKey].push(data);
 
@@ -379,10 +383,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                                             const lastValue = getLastNonNullValue(data, tsid);
                                             const maxValue = getMaxValue(data, tsid);
                                             const minValue = getMinValue(data, tsid);
+                                            const yearlyValue = getYearlyValue(data, tsid);
 
                                             locData[lastValueKey].push(lastValue);
                                             locData[maxValueKey].push(maxValue);
                                             locData[minValueKey].push(minValue);
+                                            locData[yearlyValueKey].push(yearlyValue);
                                         })
                                         .catch(error => {
                                             console.error(`Error fetching additional data for location ${locData['location-id']} with TSID ${tsid}:`, error);
@@ -486,10 +492,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                     return Promise.all(timeSeriesDataPromises);
                 })
                 .then(() => {
-                    // Assuming this is inside a promise chain (like in a `.then()`)
-
                     console.log('All combinedData data fetched successfully:', combinedData);
 
+                    // ******************** plot porMax table *****************************************
                     const porMax = combinedData[0][`assigned-locations`][0][`datman-max-value`];
                     console.log(combinedData[0][`assigned-locations`][0][`datman-max-value`]);
 
@@ -518,7 +523,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         tableBody.appendChild(row);
                     });
 
-
+                    // ******************** plot top10 table *****************************************
                     if (type === "top10") {
                         // const table = createTable(combinedData, type);
                         // const container = document.getElementById(`table_container_${reportDiv}`);
@@ -634,7 +639,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         let maxValue = -Infinity; // Start with the smallest possible value
         let maxEntry = null; // Store the corresponding max entry (timestamp, value, quality code)
 
-        console.log("data: ", data);
+        // console.log("data: ", data);
 
         // Loop through the values array
         for (let i = 0; i < data.values.length; i++) {
@@ -659,6 +664,38 @@ document.addEventListener('DOMContentLoaded', async function () {
         return maxEntry;
     }
 
+    function getYearlyValue(data, tsid) {
+        const yearlyValues = {}; // Object to group values by year
+    
+        // Loop through the values array
+        for (let i = 0; i < data.values.length; i++) {
+            const entry = data.values[i];
+            const timestamp = entry[0];
+            const value = entry[1];
+            const qualityCode = entry[2];
+    
+            // Parse the year from the timestamp
+            const year = new Date(timestamp).getFullYear();
+    
+            // Skip entries with null or undefined values
+            if (value != null) {
+                // Initialize the year array if not already present
+                if (!yearlyValues[year]) {
+                    yearlyValues[year] = [];
+                }
+    
+                // Add the current entry to the appropriate year array
+                yearlyValues[year].push({
+                    tsid: tsid,
+                    timestamp: timestamp,
+                    value: value,
+                    qualityCode: qualityCode
+                });
+            }
+        }
+    
+        return yearlyValues;
+    }    
 
     function getMinValue(data, tsid) {
         let minValue = Infinity; // Start with the largest possible value
