@@ -499,39 +499,39 @@ document.addEventListener('DOMContentLoaded', async function () {
                     console.log('All combinedData data fetched successfully:', combinedData);
 
                     // ******************** plot porMax table *****************************************
-                    const porMax = combinedData[0][`assigned-locations`][0][`datman-max-value`];
-                    console.log(combinedData[0][`assigned-locations`][0][`datman-max-value`]);
+                    // const porMax = combinedData[0][`assigned-locations`][0][`datman-max-value`];
+                    // console.log(combinedData[0][`assigned-locations`][0][`datman-max-value`]);
 
-                    const tableBody = document.querySelector("#data-table tbody");
+                    // const tableBody = document.querySelector("#data-table tbody");
 
-                    porMax.forEach(item => {
-                        const row = document.createElement("tr");
+                    // porMax.forEach(item => {
+                    //     const row = document.createElement("tr");
 
-                        // Create cells and append data
-                        const tsidCell = document.createElement("td");
-                        tsidCell.textContent = item.tsid;
-                        row.appendChild(tsidCell);
+                    //     // Create cells and append data
+                    //     const tsidCell = document.createElement("td");
+                    //     tsidCell.textContent = item.tsid;
+                    //     row.appendChild(tsidCell);
 
-                        const timestampCell = document.createElement("td");
-                        timestampCell.textContent = item.timestamp;
-                        row.appendChild(timestampCell);
+                    //     const timestampCell = document.createElement("td");
+                    //     timestampCell.textContent = item.timestamp;
+                    //     row.appendChild(timestampCell);
 
-                        const valueCell = document.createElement("td");
-                        valueCell.textContent = item.value.toFixed(2); // Format to 2 decimal places
-                        row.appendChild(valueCell);
+                    //     const valueCell = document.createElement("td");
+                    //     valueCell.textContent = item.value.toFixed(2); // Format to 2 decimal places
+                    //     row.appendChild(valueCell);
 
-                        const qualityCodeCell = document.createElement("td");
-                        qualityCodeCell.textContent = item.qualityCode;
-                        row.appendChild(qualityCodeCell);
+                    //     const qualityCodeCell = document.createElement("td");
+                    //     qualityCodeCell.textContent = item.qualityCode;
+                    //     row.appendChild(qualityCodeCell);
 
-                        tableBody.appendChild(row);
-                    });
+                    //     tableBody.appendChild(row);
+                    // });
 
                     // ******************** plot top10 table *****************************************
                     if (type === "top10") {
-                        // const table = createTable(combinedData, type);
-                        // const container = document.getElementById(`table_container_${reportDiv}`);
-                        // container.appendChild(table);
+                        const table = createTableTop10(combinedData, type);
+                        const container = document.getElementById(`table_container_${reportDiv}`);
+                        container.appendChild(table);
                     }
 
                     loadingIndicator.style.display = 'none';
@@ -1131,6 +1131,95 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         return table;
     }
+
+    function createTableTop10(data, type) {
+        const table = document.createElement('table');
+        table.id = 'customers';
+    
+        const showAllRows = type === 'status' || type === 'top10';
+    
+        data.forEach(item => {
+            let shouldPrintHeader = false;
+    
+            item['assigned-locations'].forEach(location => {
+                const datmanData = location['datman-yearly-max-value'] || [];
+    
+                // Group data by year
+                const groupedData = {};
+    
+                // Populate groupedData with values for each year
+                datmanData.forEach(datmanEntry => {
+                    Object.entries(datmanEntry).forEach(([year, entry]) => {
+                        if (!groupedData[year]) {
+                            groupedData[year] = {};
+                        }
+                        // Assign both datman1 and datman2 for each year
+                        if (!groupedData[year].datman1) {
+                            groupedData[year].datman1 = entry;
+                        } else {
+                            groupedData[year].datman2 = entry;
+                        }
+                    });
+                });
+    
+                if (!shouldPrintHeader) {
+                    const headerRow = document.createElement('tr');
+                    const idHeader = document.createElement('th');
+                    idHeader.colSpan = 6;
+                    idHeader.textContent = item.id;
+                    headerRow.appendChild(idHeader);
+                    table.appendChild(headerRow);
+    
+                    const subHeaderRow = document.createElement('tr');
+                    ['Year', 'Datman 1 Value', 'Datman 1 Timestamp', 'Datman 2 Value', 'Datman 2 Timestamp'].forEach(headerText => {
+                        const td = document.createElement('td');
+                        td.textContent = headerText;
+                        subHeaderRow.appendChild(td);
+                    });
+                    table.appendChild(subHeaderRow);
+    
+                    shouldPrintHeader = true;
+                }
+    
+                // Loop through grouped data and create rows
+                Object.keys(groupedData).forEach(year => {
+                    const yearData = groupedData[year];
+    
+                    const datman1Value = yearData.datman1 ? yearData.datman1.value.toFixed(2) : 'N/A';
+                    const datman1Timestamp = yearData.datman1 ? yearData.datman1.entry.timestamp : 'N/A';
+    
+                    const datman2Value = yearData.datman2 ? yearData.datman2.value.toFixed(2) : 'N/A';
+                    const datman2Timestamp = yearData.datman2 ? yearData.datman2.entry.timestamp : 'N/A';
+    
+                    const valueSpan1 = document.createElement('span');
+                    valueSpan1.classList.toggle('blinking-text', datman1Value === 'N/A');
+                    valueSpan1.textContent = datman1Value;
+    
+                    const valueSpan2 = document.createElement('span');
+                    valueSpan2.classList.toggle('blinking-text', datman2Value === 'N/A');
+                    valueSpan2.textContent = datman2Value;
+    
+                    const createDataRow = (cells) => {
+                        const dataRow = document.createElement('tr');
+                        cells.forEach(cellValue => {
+                            const cell = document.createElement('td');
+                            if (cellValue instanceof HTMLElement) {
+                                cell.appendChild(cellValue);
+                            } else {
+                                cell.textContent = cellValue;
+                            }
+                            dataRow.appendChild(cell);
+                        });
+                        table.appendChild(dataRow);
+                    };
+    
+                    createDataRow([year, valueSpan1, datman1Timestamp, valueSpan2, datman2Timestamp]);
+                });
+            });
+        });
+    
+        return table;
+    }     
 
     function createTableStatus(data) {
         const table = document.createElement('table');
