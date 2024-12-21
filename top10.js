@@ -1286,12 +1286,12 @@ document.addEventListener('DOMContentLoaded', async function () {
     
                     // Log only once for each year to avoid duplicates
                     if (!groupedData[a].logged) {
-                        console.log(`Year: ${a}, Datman1: ${datman1ValueA}, Datman2: ${datman2ValueA}, Max: ${maxValueA}`);
+                        // console.log(`Year: ${a}, Datman1: ${datman1ValueA}, Datman2: ${datman2ValueA}, Max: ${maxValueA}`);
                         groupedData[a].logged = true;  // Mark this year as logged
                     }
     
                     if (!groupedData[b].logged) {
-                        console.log(`Year: ${b}, Datman1: ${datman1ValueB}, Datman2: ${datman2ValueB}, Max: ${maxValueB}`);
+                        // console.log(`Year: ${b}, Datman1: ${datman1ValueB}, Datman2: ${datman2ValueB}, Max: ${maxValueB}`);
                         groupedData[b].logged = true;  // Mark this year as logged
                     }
     
