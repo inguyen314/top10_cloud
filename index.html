@@ -146,9 +146,16 @@
 <script>
     if (type === "top10") {
         const titleSpan = document.querySelector('.titleLabel.title');
+        const headerTitle = document.querySelector('header .title'); // Adjust selector based on your header structure
+        
         if (titleSpan) {
             // titleSpan.textContent = `Top 10 - ${gage.match(/^[^\.]+/)[0]}`; // Change this to the desired text
-            titleSpan.textContent = `Top 10 (${gage} and ${gage_2})`; // Change this to the desired text
+            titleSpan.textContent = `Top 10 - ${gage.split('.')[0]}`; // Change this to the desired text
+        }
+
+        // Set the title in the header
+        if (headerTitle) {
+            headerTitle.textContent = "Top 10";
         }
     }
 </script>

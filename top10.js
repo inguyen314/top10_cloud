@@ -16,8 +16,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     setTimeseriesGroup1 = "Datman";
     setTimeseriesGroup2 = "Stage";
     setLookBackHours = subtractDaysFromDate(new Date(), 30);
-    beginYear = new Date(`${begin}-01-01T00:00:00Z`);
-    beginYear_2 = new Date(`${begin_2}-01-01T00:00:00Z`);
+    // beginYear = new Date(${begin}-01-01T06:00:00Z);
+    // beginYear_2 = new Date(${begin_2}-01-01T06:00:00Z);
+    beginYear = adjustForDST(`${begin}-01-01T06:00:00Z`);
+    beginYear_2 = adjustForDST(`${begin_2}-01-01T06:00:00Z`);
 
     // Display the loading indicator for water quality alarm
     const loadingIndicator = document.getElementById(`loading_${reportDiv}`);
@@ -336,10 +338,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                                     let timeSeriesDataApiUrl = null;
                                     if (version === "datman-rev") {
-                                        timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=1000000&name=${tsid}&begin=${beginYear.toISOString()}&end=${currentDateTime.toISOString()}&office=${office}`;
+                                        timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=10000000&name=${tsid}&begin=${beginYear.toISOString()}&end=${currentDateTime.toISOString()}&office=${office}`;
                                         console.log('timeSeriesDataApiUrl:', timeSeriesDataApiUrl);
                                     } else if (version === "lrgsShef-rev") {
-                                        timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=1000000&name=${tsid}&begin=${beginYear_2.toISOString()}&end=${currentDateTime.toISOString()}&office=${office}`;
+                                        timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=10000000&name=${tsid}&begin=${beginYear_2.toISOString()}&end=${currentDateTime.toISOString()}&office=${office}`;
                                         console.log('timeSeriesDataApiUrl:', timeSeriesDataApiUrl);
                                     }
 
@@ -1155,16 +1157,26 @@ document.addEventListener('DOMContentLoaded', async function () {
                 datmanData.forEach(datmanEntry => {
                     Object.entries(datmanEntry).forEach(([year, entry]) => {
                         if (!groupedData[year]) {
-                            groupedData[year] = {};
+                            groupedData[year] = { datman1: null, datman2: null }; // Initialize with nulls
                         }
-                        // Assign both datman1 and datman2 for each year
-                        if (!groupedData[year].datman1) {
+
+                        // Assign both datman1 and datman2 for each year, ensuring nulls are handled
+                        if (groupedData[year].datman1 === null) {
                             groupedData[year].datman1 = entry;
-                        } else {
+                        } else if (groupedData[year].datman2 === null) {
                             groupedData[year].datman2 = entry;
                         }
                     });
                 });
+
+                // Ensure all years have exactly two objects
+                Object.keys(groupedData).forEach(year => {
+                    groupedData[year].datman1 = groupedData[year].datman1 ?? null;
+                    groupedData[year].datman2 = groupedData[year].datman2 ?? null;
+                });
+
+                console.log("groupedData: ", groupedData);
+
 
                 if (!shouldPrintHeader) {
                     const headerRow = document.createElement('tr');
@@ -1230,6 +1242,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         table.id = 'customers';
     
         const showAllRows = type === 'status' || type === 'top10';
+        let rowIndex = 0; // To keep track of the row index
     
         data.forEach(item => {
             let shouldPrintHeader = false;
@@ -1284,17 +1297,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     const datman2ValueB = groupedData[b].datman2 ? groupedData[b].datman2.value : -Infinity;
                     const maxValueB = Math.max(datman1ValueB, datman2ValueB);
     
-                    // Log only once for each year to avoid duplicates
-                    if (!groupedData[a].logged) {
-                        // console.log(`Year: ${a}, Datman1: ${datman1ValueA}, Datman2: ${datman2ValueA}, Max: ${maxValueA}`);
-                        groupedData[a].logged = true;  // Mark this year as logged
-                    }
-    
-                    if (!groupedData[b].logged) {
-                        // console.log(`Year: ${b}, Datman1: ${datman1ValueB}, Datman2: ${datman2ValueB}, Max: ${maxValueB}`);
-                        groupedData[b].logged = true;  // Mark this year as logged
-                    }
-    
                     return maxValueB - maxValueA; // Sort in descending order by the max value
                 });
     
@@ -1318,6 +1320,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     
                     const createDataRow = (cells) => {
                         const dataRow = document.createElement('tr');
+                        if (rowIndex < 10) {
+                            dataRow.style.backgroundColor = 'lightblue'; // Apply yellow background for the first 10 rows
+                        }
                         cells.forEach(cellValue => {
                             const cell = document.createElement('td');
                             if (cellValue instanceof HTMLElement) {
@@ -1328,6 +1333,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                             dataRow.appendChild(cell);
                         });
                         table.appendChild(dataRow);
+                        rowIndex++; // Increment the row index
                     };
     
                     createDataRow([year, valueSpan1, datman1Timestamp, valueSpan2, datman2Timestamp]);
@@ -1336,7 +1342,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     
         return table;
-    }       
+    }    
 
     function createTableStatus(data) {
         const table = document.createElement('table');
@@ -1549,5 +1555,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             table.appendChild(dataRow);
         }
+    }
+
+    function adjustForDST(dateStr) {
+        const date = new Date(dateStr);
+        const isDST = date.getTimezoneOffset() < new Date(date.getFullYear(), 0, 1).getTimezoneOffset();
+        return isDST ? date : new Date(date.getTime() - (60 * 60 * 1000)); // Adjust if not DST
     }
 });
