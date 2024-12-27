@@ -69,11 +69,14 @@
             width: 100%;
             border-collapse: collapse;
         }
-        th, td {
+
+        th,
+        td {
             border: 1px solid black;
             padding: 8px;
             text-align: left;
         }
+
         th {
             background-color: #f2f2f2;
         }
@@ -119,6 +122,16 @@
                                     <div id="table_container_top10"></div>
                                     <div id="table_container_top10_sorted"></div>
                                     <script src='https://wm.mvs.ds.usace.army.mil/apps/top10/top10.js'></script>
+                                    <p>The "Top 10" table provides a sorted view of the highest values recorded for each
+                                        location based on yearly data, which includes all data points collected within a
+                                        specific year. The data is grouped by year and analyzed to determine the single
+                                        highest value among all recorded points for that year. The table ranks these
+                                        yearly maximum values in descending order and displays the top 10 entries. Each
+                                        row represents a year, showing the maximum value, whether from Datman 1 (datman
+                                        data) or Datman 2 (stage rev data), along with its timestamp. The layout
+                                        includes columns for the year, highest value, and timestamp, with the top 10
+                                        rows highlighted in light blue for easy identification of peak yearly
+                                        performance.</p>
                                 </div>
                             </div>
                         </div>
@@ -147,10 +160,11 @@
     if (type === "top10") {
         const titleSpan = document.querySelector('.titleLabel.title');
         const headerTitle = document.querySelector('header .title'); // Adjust selector based on your header structure
-        
+
         if (titleSpan) {
             // titleSpan.textContent = `Top 10 - ${gage.match(/^[^\.]+/)[0]}`; // Change this to the desired text
-            titleSpan.textContent = `Top 10 - ${gage.split('.')[0]}`; // Change this to the desired text
+            // titleSpan.textContent = `Top 10 - ${gage.split('.')[0]}`; // Change this to the desired text
+            titleSpan.textContent = `Top 10`; // Change this to the desired text
         }
 
         // Set the title in the header
