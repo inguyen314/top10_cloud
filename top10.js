@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     let reportDiv = null;
     let beginYear = null;
     let beginYear_2 = null;
+    let endYear = null;
+    let endYear_2 = null;
 
     reportDiv = "top10";
     setLocationCategory = "Basins";
@@ -20,6 +22,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     // beginYear_2 = new Date(${begin_2}-01-01T06:00:00Z);
     beginYear = adjustForDST(`${begin}-01-01T06:00:00Z`);
     beginYear_2 = adjustForDST(`${begin_2}-01-01T06:00:00Z`);
+    endYear = adjustForDST(`${end}-12-31T06:00:00Z`);
+    endYear_2 = adjustForDST(`${end_2}-12-31T06:00:00Z`);
 
     // Display the loading indicator for water quality alarm
     const loadingIndicator = document.getElementById(`loading_${reportDiv}`);
@@ -338,10 +342,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                                     let timeSeriesDataApiUrl = null;
                                     if (version === "datman-rev") {
-                                        timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=10000000&name=${tsid}&begin=${beginYear.toISOString()}&end=${currentDateTime.toISOString()}&office=${office}`;
+                                        timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=10000000&name=${tsid}&begin=${beginYear.toISOString()}&end=${endYear.toISOString()}&office=${office}`;
                                         console.log('timeSeriesDataApiUrl:', timeSeriesDataApiUrl);
                                     } else if (version === "lrgsShef-rev") {
-                                        timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=10000000&name=${tsid}&begin=${beginYear_2.toISOString()}&end=${currentDateTime.toISOString()}&office=${office}`;
+                                        timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=10000000&name=${tsid}&begin=${beginYear_2.toISOString()}&end=${endYear_2.toISOString()}&office=${office}`;
                                         console.log('timeSeriesDataApiUrl:', timeSeriesDataApiUrl);
                                     }
 

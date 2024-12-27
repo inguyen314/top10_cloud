@@ -42,6 +42,9 @@
 
     var end_2 = urlParams.get('end_2') || null;
     console.log('end_2: ', end_2);
+
+    var top10 = urlParams.get('top10') || null;
+    console.log('top10: ', top10);
 </script>
 
 <head>
@@ -100,6 +103,21 @@
                                 <span class="titleLabel title">Top 10 - St Louis-Mississippi</span>
                                 <span class="rss"></span>
                             </h2>
+
+                            <form id="yearForm" onsubmit="updateUrlParams(event)">
+                                <label for="dropdown1">Start Year:</label>
+                                <select id="dropdown1">
+                                    <!-- Dropdown options will be populated by JavaScript -->
+                                </select>
+                            
+                                <label for="dropdown2">End Year:</label>
+                                <select id="dropdown2">
+                                    <!-- Dropdown options will be populated by JavaScript -->
+                                </select>
+                            
+                                <button type="submit">Submit</button>
+                            </form>
+
                             <div class="box-content" style="background-color:white;margin:auto">
                                 <div class="content">
                                     <!-- <table id="data-table">
@@ -162,8 +180,6 @@
         const headerTitle = document.querySelector('header .title'); // Adjust selector based on your header structure
 
         if (titleSpan) {
-            // titleSpan.textContent = `Top 10 - ${gage.match(/^[^\.]+/)[0]}`; // Change this to the desired text
-            // titleSpan.textContent = `Top 10 - ${gage.split('.')[0]}`; // Change this to the desired text
             titleSpan.textContent = `Top 10`; // Change this to the desired text
         }
 
@@ -172,4 +188,91 @@
             headerTitle.textContent = "Top 10";
         }
     }
+</script>
+
+<script>
+    // Function to populate the dropdowns
+    function populateDropdowns() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const begin = urlParams.get('begin'); 
+        const begin_2 = urlParams.get('begin_2') || begin; 
+        const end = urlParams.get('end'); 
+        const end_2 = urlParams.get('end_2') || end; 
+        const endYear = urlParams.get('end');
+
+        const dropdown1 = document.getElementById('dropdown1');
+        const dropdown2 = document.getElementById('dropdown2');
+
+        dropdown1.innerHTML = '';
+        dropdown2.innerHTML = '';
+
+        // Populate dropdown1 (start year)
+        for (let year = parseInt(begin); year <= endYear; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            dropdown1.appendChild(option);
+        }
+
+        // Populate dropdown2 (end year)
+        for (let year = parseInt(begin_2); year <= endYear; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            dropdown2.appendChild(option);
+        }
+
+        // Set the values of dropdown1 and dropdown2 to match the URL parameters
+        dropdown1.value = begin;
+        dropdown2.value = end;
+
+        dropdown1.addEventListener('change', function () {
+            const selectedBeginYear = parseInt(dropdown1.value);
+            if (selectedBeginYear > parseInt(dropdown2.value)) {
+                dropdown2.value = selectedBeginYear; // Ensure dropdown2 is >= dropdown1
+            }
+        });
+
+        // Ensure dropdown2 year is equal or greater than dropdown1
+        if (parseInt(dropdown2.value) < parseInt(dropdown1.value)) {
+            dropdown2.value = dropdown1.value;
+        }
+    }
+
+    // Update URL parameters on form submit and navigate to the new URL
+    function updateUrlParams(event) {
+        event.preventDefault(); // Prevent form from submitting normally
+
+        const dropdown1 = document.getElementById('dropdown1');
+        const dropdown2 = document.getElementById('dropdown2');
+
+        const begin = dropdown1.value;
+        const end = dropdown2.value;
+
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Update URL with new parameters
+        urlParams.set('begin', begin);
+        urlParams.set('end', end);
+
+        // Define the other parameters (you can modify these values as needed)
+        // const office = 'MVS'; // Example value, can be dynamic
+        // const type = 'top10'; // Example value, can be dynamic
+        // const gage = 'Jefferson Brks-Mississippi.Stage.Inst.~1Day.0.datman-rev'; // Example value, can be dynamic
+        // const gage_2 = 'Jefferson Brks-Mississippi.Stage.Inst.30Minutes.0.lrgsShef-rev'; // Example value, can be dynamic
+        // const begin_2 = begin; // Use selected begin year for second selection
+        // const end_2 = end; // Use selected end year for second selection
+        // const top10 = 'max'; // Example value, can be dynamic
+
+        // Build the new URL
+        const newUrl = `index.html?office=${office}&type=${type}&gage=${encodeURIComponent(gage)}&gage_2=${encodeURIComponent(gage_2)}&begin=${begin}&end=${end}&begin_2=${begin}&end_2=${end}&top10=${top10}`;
+        
+        // Update the URL and navigate to the new URL
+        window.location.href = newUrl; // This will redirect the user to the new URL
+
+        console.log("Updated URL and Redirecting: ", newUrl); // Log the updated URL to the console
+    }
+
+    // Call populateDropdowns on page load
+    window.onload = populateDropdowns;
 </script>
