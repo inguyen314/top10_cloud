@@ -83,6 +83,65 @@
         th {
             background-color: #f2f2f2;
         }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            padding: 20px;
+            margin: 0;
+        }
+
+        #yearForm {
+            gap: 1rem;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Ensures the dropdown aligns to the left */
+            text-align: left;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+            color: #333;
+        }
+
+        select {
+            font-size: 1rem;
+            padding: 0.4rem 0.6rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: #fff;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus {
+            border-color: #007BFF;
+        }
+
+        button {
+            font-size: 1rem;
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 
@@ -109,12 +168,12 @@
                                 <select id="dropdown1">
                                     <!-- Dropdown options will be populated by JavaScript -->
                                 </select>
-                            
+
                                 <label for="dropdown2">End Year:</label>
                                 <select id="dropdown2">
                                     <!-- Dropdown options will be populated by JavaScript -->
                                 </select>
-                            
+
                                 <button type="submit">Submit</button>
                             </form>
 
@@ -191,13 +250,12 @@
 </script>
 
 <script>
-    // Function to populate the dropdowns
     function populateDropdowns() {
         const urlParams = new URLSearchParams(window.location.search);
-        const begin = urlParams.get('begin'); 
-        const begin_2 = urlParams.get('begin_2') || begin; 
-        const end = urlParams.get('end'); 
-        const end_2 = urlParams.get('end_2') || end; 
+        const begin = urlParams.get('begin');
+        const begin_2 = urlParams.get('begin_2') || begin;
+        const end = urlParams.get('end');
+        const end_2 = urlParams.get('end_2') || end;
         const endYear = urlParams.get('end');
 
         const dropdown1 = document.getElementById('dropdown1');
@@ -239,7 +297,6 @@
         }
     }
 
-    // Update URL parameters on form submit and navigate to the new URL
     function updateUrlParams(event) {
         event.preventDefault(); // Prevent form from submitting normally
 
@@ -255,24 +312,14 @@
         urlParams.set('begin', begin);
         urlParams.set('end', end);
 
-        // Define the other parameters (you can modify these values as needed)
-        // const office = 'MVS'; // Example value, can be dynamic
-        // const type = 'top10'; // Example value, can be dynamic
-        // const gage = 'Jefferson Brks-Mississippi.Stage.Inst.~1Day.0.datman-rev'; // Example value, can be dynamic
-        // const gage_2 = 'Jefferson Brks-Mississippi.Stage.Inst.30Minutes.0.lrgsShef-rev'; // Example value, can be dynamic
-        // const begin_2 = begin; // Use selected begin year for second selection
-        // const end_2 = end; // Use selected end year for second selection
-        // const top10 = 'max'; // Example value, can be dynamic
-
         // Build the new URL
         const newUrl = `index.html?office=${office}&type=${type}&gage=${encodeURIComponent(gage)}&gage_2=${encodeURIComponent(gage_2)}&begin=${begin}&end=${end}&begin_2=${begin}&end_2=${end}&top10=${top10}`;
-        
+
         // Update the URL and navigate to the new URL
         window.location.href = newUrl; // This will redirect the user to the new URL
 
         console.log("Updated URL and Redirecting: ", newUrl); // Log the updated URL to the console
     }
 
-    // Call populateDropdowns on page load
     window.onload = populateDropdowns;
 </script>

@@ -20,10 +20,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     setLookBackHours = subtractDaysFromDate(new Date(), 30);
     // beginYear = new Date(${begin}-01-01T06:00:00Z);
     // beginYear_2 = new Date(${begin_2}-01-01T06:00:00Z);
-    beginYear = adjustForDST(`${begin}-01-01T06:00:00Z`);
-    beginYear_2 = adjustForDST(`${begin_2}-01-01T06:00:00Z`);
-    endYear = adjustForDST(`${end}-12-31T06:00:00Z`);
-    endYear_2 = adjustForDST(`${end_2}-12-31T06:00:00Z`);
+    beginYear = adjustForDST(`${begin}-01-01T07:01:00Z`);
+    beginYear_2 = adjustForDST(`${begin}-01-01T07:01:00Z`);
+    endYear = new Date((adjustForDST(`${end}-12-31T06:59:00Z`)).getTime() + (60000*60*24));
+    endYear_2 = new Date((adjustForDST(`${end}-12-31T06:59:00Z`)).getTime() + (60000*60*24));
 
     // Display the loading indicator for water quality alarm
     const loadingIndicator = document.getElementById(`loading_${reportDiv}`);
@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     console.log("setLookBackHours: ", setLookBackHours);
     console.log("beginYear: ", beginYear);
     console.log("beginYear_2: ", beginYear_2);
+    console.log("endYear: ", endYear);
+    console.log("endYear_2: ", endYear_2);
 
     let setBaseUrl = null;
     if (cda === "internal") {
@@ -585,12 +587,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     const reorderByAttribute = (data) => {
         data['assigned-time-series'].sort((a, b) => a.attribute - b.attribute);
-    };
+    }
 
     const formatTime = (date) => {
         const pad = (num) => (num < 10 ? '0' + num : num);
         return `${pad(date.getMonth() + 1)}-${pad(date.getDate())}-${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-    };
+    }
 
     const findValuesAtTimes = (data) => {
         const result = [];
@@ -629,7 +631,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
 
         return result;
-    };
+    }
 
     function getLastNonNullValue(data, tsid) {
         // Iterate over the values array in reverse
@@ -1564,8 +1566,25 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function adjustForDST(dateStr) {
+        // console.log(`Input date string (expected UTC): ${dateStr}`);
+        
         const date = new Date(dateStr);
-        const isDST = date.getTimezoneOffset() < new Date(date.getFullYear(), 0, 1).getTimezoneOffset();
-        return isDST ? date : new Date(date.getTime() - (60 * 60 * 1000)); // Adjust if not DST
+        // console.log(`Parsed date (local): ${date}`);
+        // console.log(`Parsed date (UTC): ${date.toUTCString()}`);
+        
+        const januaryOffset = new Date(date.getUTCFullYear(), 0, 1).getTimezoneOffset();
+        // console.log(`UTC offset on January 1st (standard time): ${januaryOffset} minutes`);
+        
+        const currentOffset = date.getTimezoneOffset();
+        // console.log(`UTC offset for input date: ${currentOffset} minutes`);
+        
+        const isDST = currentOffset < januaryOffset;
+        // console.log(`Is the date in DST? ${isDST}`);
+        
+        const adjustedDate = isDST ? date : new Date(date.getTime() - (60 * 60 * 1000));
+        // console.log(`Adjusted date (local): ${adjustedDate}`);
+        // console.log(`Adjusted date (UTC): ${adjustedDate.toUTCString()}`);
+        
+        return adjustedDate;
     }
 });
