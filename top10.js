@@ -20,8 +20,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     setLookBackHours = subtractDaysFromDate(new Date(), 30);
     // beginYear = new Date(${begin}-01-01T06:00:00Z);
     // beginYear_2 = new Date(${begin_2}-01-01T06:00:00Z);
-    beginYear = adjustForDST(`${begin}-01-01T07:01:00Z`);
-    beginYear_2 = adjustForDST(`${begin}-01-01T07:01:00Z`);
+    beginYear = adjustForDST(`${begin}-01-01T07:00:00Z`);
+    beginYear_2 = adjustForDST(`${begin}-01-01T07:00:00Z`);
     endYear = new Date((adjustForDST(`${end}-12-31T06:59:00Z`)).getTime() + (60000*60*24));
     endYear_2 = new Date((adjustForDST(`${end}-12-31T06:59:00Z`)).getTime() + (60000*60*24));
 
