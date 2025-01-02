@@ -346,7 +346,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     if (version === "datman-rev") {
                                         timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=10000000&name=${tsid}&begin=${beginYear.toISOString()}&end=${endYear.toISOString()}&office=${office}`;
                                         console.log('timeSeriesDataApiUrl:', timeSeriesDataApiUrl);
-                                    } else if (version === "lrgsShef-rev") {
+                                    } else if (version === "lrgsShef-rev" || version === "29") {
                                         timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=10000000&name=${tsid}&begin=${beginYear_2.toISOString()}&end=${endYear_2.toISOString()}&office=${office}`;
                                         console.log('timeSeriesDataApiUrl:', timeSeriesDataApiUrl);
                                     }
