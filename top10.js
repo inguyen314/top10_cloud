@@ -349,6 +349,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     } else if (version === "lrgsShef-rev" || version === "29") {
                                         timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=10000000&name=${tsid}&begin=${beginYear_2.toISOString()}&end=${endYear_2.toISOString()}&office=${office}`;
                                         console.log('timeSeriesDataApiUrl:', timeSeriesDataApiUrl);
+                                    } else {
+                                        console.log('Not able to fetch time series data. Check time series version!');
                                     }
 
                                     return fetch(timeSeriesDataApiUrl, {
