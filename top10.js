@@ -22,8 +22,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     // beginYear_2 = new Date(${begin_2}-01-01T06:00:00Z);
     beginYear = adjustForDST(`${begin}-01-01T07:00:00Z`);
     beginYear_2 = adjustForDST(`${begin}-01-01T07:00:00Z`);
-    endYear = new Date((adjustForDST(`${end}-12-31T06:59:00Z`)).getTime() + (60000*60*24));
-    endYear_2 = new Date((adjustForDST(`${end}-12-31T06:59:00Z`)).getTime() + (60000*60*24));
+    endYear = new Date((adjustForDST(`${end}-12-31T06:59:00Z`)).getTime() + (60000 * 60 * 24));
+    endYear_2 = new Date((adjustForDST(`${end}-12-31T06:59:00Z`)).getTime() + (60000 * 60 * 24));
 
     // Display the loading indicator for water quality alarm
     const loadingIndicator = document.getElementById(`loading_${reportDiv}`);
@@ -1247,21 +1247,21 @@ document.addEventListener('DOMContentLoaded', async function () {
         const table = document.createElement('table');
         table.id = 'customers';
         table.style.width = '50%'; // Set the table width to 50%
-    
+
         let rowIndex = 0; // To keep track of the row index
-    
+
         console.log("type: ", type);
         console.log("top10: ", top10);
-    
+
         data.forEach(item => {
             let shouldPrintHeader = false;
-    
+
             item['assigned-locations'].forEach(location => {
                 const datmanData = location['datman-yearly-max-value'] || [];
-    
+
                 // Group data by year
                 const groupedData = {};
-    
+
                 // Populate groupedData with values for each year
                 datmanData.forEach(datmanEntry => {
                     Object.entries(datmanEntry).forEach(([year, entry]) => {
@@ -1276,7 +1276,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         }
                     });
                 });
-    
+
                 if (!shouldPrintHeader) {
                     const headerRow = document.createElement('tr');
                     const idHeader = document.createElement('th');
@@ -1284,7 +1284,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     idHeader.textContent = location[`location-id`];
                     headerRow.appendChild(idHeader);
                     table.appendChild(headerRow);
-    
+
                     const subHeaderRow = document.createElement('tr');
                     ['Year', 'Max Value', 'Timestamp'].forEach(headerText => {
                         const td = document.createElement('td');
@@ -1292,10 +1292,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                         subHeaderRow.appendChild(td);
                     });
                     table.appendChild(subHeaderRow);
-    
+
                     shouldPrintHeader = true;
                 }
-    
+
                 // Sort groupedData based on the value of top10
                 const sortedYears = Object.keys(groupedData).sort((a, b) => {
                     const getMaxValue = (data) =>
@@ -1303,32 +1303,38 @@ document.addEventListener('DOMContentLoaded', async function () {
                             data.datman1?.value || -Infinity,
                             data.datman2?.value || -Infinity
                         );
-    
+
                     const maxValueA = getMaxValue(groupedData[a]);
                     const maxValueB = getMaxValue(groupedData[b]);
-    
+
                     // Sort descending for "max", ascending for "min"
                     return top10 === "min" ? maxValueA - maxValueB : maxValueB - maxValueA;
                 });
-    
+
                 // Loop through sorted years and create rows
                 sortedYears.forEach(year => {
                     const yearData = groupedData[year];
-    
+
                     // Determine the max value and corresponding timestamp
                     const datman1Value = yearData.datman1 ? yearData.datman1.value : -Infinity;
                     const datman1Timestamp = yearData.datman1 ? yearData.datman1.entry.timestamp : null;
-    
+
                     const datman2Value = yearData.datman2 ? yearData.datman2.value : -Infinity;
                     const datman2Timestamp = yearData.datman2 ? yearData.datman2.entry.timestamp : null;
-    
+
                     const maxValue = Math.max(datman1Value, datman2Value);
                     const maxTimestamp = maxValue === datman1Value ? datman1Timestamp : datman2Timestamp;
-    
+
                     const valueSpan = document.createElement('span');
-                    valueSpan.classList.toggle('blinking-text', maxValue === -Infinity);
+
+                    // Add blinking-text class if maxValue is greater than 900
+                    if (maxValue > 900 || maxValue < -900) {
+                        valueSpan.classList.add('blinking-text');
+                    }
+
                     valueSpan.textContent = maxValue !== -Infinity ? maxValue.toFixed(2) : 'N/A';
-    
+
+
                     const createDataRow = (cells) => {
                         const dataRow = document.createElement('tr');
                         if (rowIndex < 10) {
@@ -1346,14 +1352,14 @@ document.addEventListener('DOMContentLoaded', async function () {
                         table.appendChild(dataRow);
                         rowIndex++; // Increment the row index
                     };
-    
+
                     createDataRow([year, valueSpan, maxTimestamp || 'N/A']);
                 });
             });
         });
-    
+
         return table;
-    }    
+    }
 
     function createTableStatus(data) {
         const table = document.createElement('table');
@@ -1570,24 +1576,24 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function adjustForDST(dateStr) {
         // console.log(`Input date string (expected UTC): ${dateStr}`);
-        
+
         const date = new Date(dateStr);
         // console.log(`Parsed date (local): ${date}`);
         // console.log(`Parsed date (UTC): ${date.toUTCString()}`);
-        
+
         const januaryOffset = new Date(date.getUTCFullYear(), 0, 1).getTimezoneOffset();
         // console.log(`UTC offset on January 1st (standard time): ${januaryOffset} minutes`);
-        
+
         const currentOffset = date.getTimezoneOffset();
         // console.log(`UTC offset for input date: ${currentOffset} minutes`);
-        
+
         const isDST = currentOffset < januaryOffset;
         // console.log(`Is the date in DST? ${isDST}`);
-        
+
         const adjustedDate = isDST ? date : new Date(date.getTime() - (60 * 60 * 1000));
         // console.log(`Adjusted date (local): ${adjustedDate}`);
         // console.log(`Adjusted date (UTC): ${adjustedDate.toUTCString()}`);
-        
+
         return adjustedDate;
     }
 });
