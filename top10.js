@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     setLocationCategory = "Basins";
     setLocationGroupOwner = "Datman";
     setTimeseriesGroup1 = "Datman";
-    setTimeseriesGroup2 = "Stage";
+    setTimeseriesGroup2 = "Datman-Stage";
     setLookBackHours = subtractDaysFromDate(new Date(), 30);
     // beginYear = new Date(${begin}-01-01T06:00:00Z);
     // beginYear_2 = new Date(${begin_2}-01-01T06:00:00Z);
@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     console.log("setLocationCategory: ", setLocationCategory);
     console.log("setLocationGroupOwner: ", setLocationGroupOwner);
     console.log("setTimeseriesGroup1: ", setTimeseriesGroup1);
+    console.log("setTimeseriesGroup2: ", setTimeseriesGroup2);
     console.log("setLookBackHours: ", setLookBackHours);
     console.log("beginYear: ", beginYear);
     console.log("beginYear_2: ", beginYear_2);
@@ -237,25 +238,24 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                     console.log('combinedData:', combinedData);
 
-                    // Step 1: Filter out locations where 'attribute' ends with '.1'
-                    combinedData.forEach((dataObj, index) => {
-                        // console.log(`Processing dataObj at index ${index}:`, dataObj['assigned-locations']);
+                    // // Step 1: Filter out locations where 'attribute' ends with '.1'
+                    // combinedData.forEach((dataObj, index) => {
+                    //     // console.log(`Processing dataObj at index ${index}:`, dataObj['assigned-locations']);
 
-                        // Filter out locations with 'attribute' ending in '.1'
-                        dataObj['assigned-locations'] = dataObj['assigned-locations'].filter(location => {
-                            const attribute = location['attribute'].toString();
-                            if (attribute.endsWith('.1')) {
-                                // Log the location being removed
-                                // console.log(`Removing location with attribute '${attribute}' and id '${location['location-id']}' at index ${index}`);
-                                return false; // Filter out this location
-                            }
-                            return true; // Keep the location
-                        });
+                    //     // Filter out locations with 'attribute' ending in '.1'
+                    //     dataObj['assigned-locations'] = dataObj['assigned-locations'].filter(location => {
+                    //         const attribute = location['attribute'].toString();
+                    //         if (attribute.endsWith('.1')) {
+                    //             // Log the location being removed
+                    //             // console.log(`Removing location with attribute '${attribute}' and id '${location['location-id']}' at index ${index}`);
+                    //             return false; // Filter out this location
+                    //         }
+                    //         return true; // Keep the location
+                    //     });
 
-                        // console.log(`Updated assigned-locations for index ${index}:`, dataObj['assigned-locations']);
-                    });
-
-                    console.log('Filtered all locations ending with .1 successfully:', combinedData);
+                    //     // console.log(`Updated assigned-locations for index ${index}:`, dataObj['assigned-locations']);
+                    // });
+                    // console.log('Filtered all locations ending with .1 successfully:', combinedData);
 
                     // Step 2: Filter out locations where 'location-id' doesn't match owner's 'assigned-locations'
                     combinedData.forEach(dataGroup => {
