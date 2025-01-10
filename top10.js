@@ -1183,8 +1183,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     groupedData[year].datman2 = groupedData[year].datman2 ?? null;
                 });
 
-                console.log("groupedData: ", groupedData);
-
+                // console.log("groupedData: ", groupedData);
 
                 if (!shouldPrintHeader) {
                     const headerRow = document.createElement('tr');
@@ -1252,8 +1251,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         let rowIndex = 0; // To keep track of the row index
 
-        console.log("type: ", type);
-        console.log("top10: ", top10);
+        // console.log("type: ", type);
+        // console.log("top10: ", top10);
 
         data.forEach(item => {
             let shouldPrintHeader = false;
