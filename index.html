@@ -22,6 +22,9 @@
     var type = urlParams.get('type') || null;
     console.log('type: ', type);
 
+    var type_flow = urlParams.get('type_flow');
+    console.log('type_flow: ', type_flow);
+
     var basin = urlParams.get('basin') || null;
     console.log('basin: ', basin);
 
@@ -242,6 +245,30 @@
 
         if (titleSpan) {
             titleSpan.textContent = `Top 10 - ${gage.split('.')[0]}`; // Change this to the desired text
+        }
+
+        // Set the title in the header
+        if (headerTitle) {
+            headerTitle.textContent = "Top 10";
+        }
+    } else if (type_flow === "top10_inflow") {
+        const titleSpan = document.querySelector('.titleLabel.title');
+        const headerTitle = document.querySelector('header .title'); // Adjust selector based on your header structure
+
+        if (titleSpan) {
+            titleSpan.textContent = `Top 10 Inflow - ${gage.split('.')[0]}`; // Change this to the desired text
+        }
+
+        // Set the title in the header
+        if (headerTitle) {
+            headerTitle.textContent = "Top 10";
+        }
+    } else if (type_flow === "top10_outflow") {
+        const titleSpan = document.querySelector('.titleLabel.title');
+        const headerTitle = document.querySelector('header .title'); // Adjust selector based on your header structure
+
+        if (titleSpan) {
+            titleSpan.textContent = `Top 10 Outflow - ${gage.split('.')[0]}`; // Change this to the desired text
         }
 
         // Set the title in the header

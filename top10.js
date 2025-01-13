@@ -15,8 +15,22 @@ document.addEventListener('DOMContentLoaded', async function () {
     reportDiv = "top10";
     setLocationCategory = "Basins";
     setLocationGroupOwner = "Datman";
-    setTimeseriesGroup1 = "Datman";
-    setTimeseriesGroup2 = "Datman-Stage";
+
+    if (typeof type_flow === 'undefined' || type_flow === null) {
+        type_flow = null;
+    }
+
+    if (type_flow === 'top10_inflow') {
+        setTimeseriesGroup1 = "Datman-Inflow";
+        setTimeseriesGroup2 = "Datman-Outflow";
+    } else if (type_flow === 'top10_outflow') {
+        setTimeseriesGroup1 = "Datman-Outflow";
+        setTimeseriesGroup2 = "Datman-Inflow";
+    } else {
+        setTimeseriesGroup1 = "Datman";
+        setTimeseriesGroup2 = "Datman-Stage";
+    }
+
     setLookBackHours = subtractDaysFromDate(new Date(), 30);
     // beginYear = new Date(${begin}-01-01T06:00:00Z);
     // beginYear_2 = new Date(${begin_2}-01-01T06:00:00Z);
@@ -349,6 +363,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     } else if (version === "lrgsShef-rev" || version === "29") {
                                         timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=10000000&name=${tsid}&begin=${beginYear_2.toISOString()}&end=${endYear_2.toISOString()}&office=${office}`;
                                         console.log('timeSeriesDataApiUrl:', timeSeriesDataApiUrl);
+                                    } else if (version === "lakerep-rev") {
+                                        timeSeriesDataApiUrl = setBaseUrl + `timeseries?page-size=10000000&name=${tsid}&begin=${beginYear.toISOString()}&end=${endYear.toISOString()}&office=${office}`;
+                                        console.log('timeSeriesDataApiUrl:', timeSeriesDataApiUrl);
                                     } else {
                                         console.log('Not able to fetch time series data. Check time series version!');
                                     }
@@ -538,15 +555,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                     // });
 
                     // ******************** plot top10 table *****************************************
-                    if (type === "top10") {
-                        const table = createTableTop10(combinedData, type);
-                        const container = document.getElementById(`table_container_${reportDiv}`);
-                        container.appendChild(table);
+                    const table = createTableTop10(combinedData, type, type_flow);
+                    const container = document.getElementById(`table_container_${reportDiv}`);
+                    container.appendChild(table);
 
-                        const table2 = createTableTop10Sorted(combinedData, type, top10);
-                        const container2 = document.getElementById(`table_container_top10_sorted`);
-                        container2.appendChild(table2);
-                    }
+                    const table2 = createTableTop10Sorted(combinedData, type, top10, type_flow);
+                    const container2 = document.getElementById(`table_container_top10_sorted`);
+                    container2.appendChild(table2);
 
                     loadingIndicator.style.display = 'none';
                 })
@@ -1146,7 +1161,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         return table;
     }
 
-    function createTableTop10(data, type) {
+    function createTableTop10(data, type, type_flow) {
         const table = document.createElement('table');
         table.id = 'customers';
 
@@ -1244,7 +1259,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         return table;
     }
 
-    function createTableTop10Sorted(data, type, top10) {
+    function createTableTop10Sorted(data, type, top10, type_flow) {
         const table = document.createElement('table');
         table.id = 'customers';
         table.style.width = '50%'; // Set the table width to 50%
