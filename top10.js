@@ -555,13 +555,23 @@ document.addEventListener('DOMContentLoaded', async function () {
                     // });
 
                     // ******************** plot top10 table *****************************************
-                    const table = createTableTop10(combinedData, type, type_flow);
-                    const container = document.getElementById(`table_container_${reportDiv}`);
-                    container.appendChild(table);
+                    if (type_flow === "top10_inflow" || type_flow === "top10_outflow") {
+                        const table = createTableTop10Flow(combinedData, type, type_flow);
+                        const container = document.getElementById(`table_container_${reportDiv}`);
+                        container.appendChild(table);
 
-                    const table2 = createTableTop10Sorted(combinedData, type, top10, type_flow);
-                    const container2 = document.getElementById(`table_container_top10_sorted`);
-                    container2.appendChild(table2);
+                        const table2 = createTableTop10SortedFlow(combinedData, type, top10, type_flow);
+                        const container2 = document.getElementById(`table_container_top10_sorted`);
+                        container2.appendChild(table2);
+                    } else {
+                        const table = createTableTop10(combinedData, type, type_flow);
+                        const container = document.getElementById(`table_container_${reportDiv}`);
+                        container.appendChild(table);
+
+                        const table2 = createTableTop10Sorted(combinedData, type, top10, type_flow);
+                        const container2 = document.getElementById(`table_container_top10_sorted`);
+                        container2.appendChild(table2);
+                    }
 
                     loadingIndicator.style.display = 'none';
                 })
@@ -1377,6 +1387,106 @@ document.addEventListener('DOMContentLoaded', async function () {
         return table;
     }
 
+    function createTableTop10SortedFlow(data, type, top10, type_flow) {
+        const table = document.createElement('table');
+        table.id = 'customers';
+        table.style.width = '50%'; // Set the table width to 50%
+    
+        let rowIndex = 0; // To keep track of the row index
+    
+        data.forEach(item => {
+            let shouldPrintHeader = false;
+    
+            item['assigned-locations'].forEach(location => {
+                const datmanData = location['datman-yearly-max-value'] || [];
+    
+                // Group data by year
+                const groupedData = {};
+    
+                // Populate groupedData with values for each year
+                datmanData.forEach(datmanEntry => {
+                    Object.entries(datmanEntry).forEach(([year, entry]) => {
+                        if (!groupedData[year]) {
+                            groupedData[year] = {};
+                        }
+                        // Assign only datman1 for each year
+                        if (!groupedData[year].datman1) {
+                            groupedData[year].datman1 = entry;
+                        }
+                    });
+                });
+    
+                if (!shouldPrintHeader) {
+                    const headerRow = document.createElement('tr');
+                    const idHeader = document.createElement('th');
+                    idHeader.colSpan = 3; // Adjust for 3 columns (Year, Max Value, Timestamp)
+                    idHeader.textContent = location[`location-id`];
+                    headerRow.appendChild(idHeader);
+                    table.appendChild(headerRow);
+    
+                    const subHeaderRow = document.createElement('tr');
+                    ['Year', 'Max Value', 'Timestamp'].forEach(headerText => {
+                        const td = document.createElement('td');
+                        td.textContent = headerText;
+                        subHeaderRow.appendChild(td);
+                    });
+                    table.appendChild(subHeaderRow);
+    
+                    shouldPrintHeader = true;
+                }
+    
+                // Sort groupedData based on the value of top10
+                const sortedYears = Object.keys(groupedData).sort((a, b) => {
+                    const maxValueA = groupedData[a].datman1?.value || -Infinity;
+                    const maxValueB = groupedData[b].datman1?.value || -Infinity;
+    
+                    // Sort descending for "max", ascending for "min"
+                    return top10 === "min" ? maxValueA - maxValueB : maxValueB - maxValueA;
+                });
+    
+                // Loop through sorted years and create rows
+                sortedYears.forEach(year => {
+                    const yearData = groupedData[year];
+    
+                    // Determine the value and timestamp for datman1
+                    const datman1Value = yearData.datman1 ? yearData.datman1.value : -Infinity;
+                    const datman1Timestamp = yearData.datman1 ? yearData.datman1.entry.timestamp : null;
+    
+                    const valueSpan = document.createElement('span');
+    
+                    // Add blinking-text class if datman1Value is greater than 900 or less than -900
+                    if (datman1Value > 500000 || datman1Value < -500000) {
+                        valueSpan.classList.add('blinking-text');
+                    }
+    
+                    valueSpan.textContent = datman1Value !== -Infinity ? datman1Value.toFixed(0) : 'N/A';
+    
+                    const createDataRow = (cells) => {
+                        const dataRow = document.createElement('tr');
+                        if (rowIndex < 10) {
+                            dataRow.style.backgroundColor = 'lightblue'; // Highlight first 10 rows
+                        }
+                        cells.forEach(cellValue => {
+                            const cell = document.createElement('td');
+                            if (cellValue instanceof HTMLElement) {
+                                cell.appendChild(cellValue);
+                            } else {
+                                cell.textContent = cellValue;
+                            }
+                            dataRow.appendChild(cell);
+                        });
+                        table.appendChild(dataRow);
+                        rowIndex++; // Increment the row index
+                    };
+    
+                    createDataRow([year, valueSpan, datman1Timestamp || 'N/A']);
+                });
+            });
+        });
+    
+        return table;
+    }    
+
     function createTableStatus(data) {
         const table = document.createElement('table');
         table.id = 'customers';
@@ -1612,4 +1722,86 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         return adjustedDate;
     }
+
+    function createTableTop10Flow(data, type, type_flow) {
+        const table = document.createElement('table');
+        table.id = 'customers';
+    
+        const showAllRows = type === 'status' || type === 'top10';
+    
+        data.forEach(item => {
+            let shouldPrintHeader = false;
+    
+            item['assigned-locations'].forEach(location => {
+                const datmanData = location['datman-yearly-max-value'] || [];
+    
+                // Group data by year
+                const groupedData = {};
+    
+                // Populate groupedData with values for each year
+                datmanData.forEach(datmanEntry => {
+                    Object.entries(datmanEntry).forEach(([year, entry]) => {
+                        if (!groupedData[year]) {
+                            groupedData[year] = { datman1: null }; // Initialize with null
+                        }
+                        if (groupedData[year].datman1 === null) {
+                            groupedData[year].datman1 = entry;
+                        }
+                    });
+                });
+    
+                if (!shouldPrintHeader) {
+                    const headerRow = document.createElement('tr');
+                    const idHeader = document.createElement('th');
+                    idHeader.colSpan = 3; // Adjust for 3 columns (Year, Datman Value, Datman Timestamp)
+                    idHeader.textContent = item.id;
+                    headerRow.appendChild(idHeader);
+                    table.appendChild(headerRow);
+    
+                    const subHeaderRow = document.createElement('tr');
+                    const headers = ['Year', 'Datman Value', 'Datman Timestamp'];
+                    headers.forEach(headerText => {
+                        const td = document.createElement('td');
+                        td.textContent = headerText;
+                        subHeaderRow.appendChild(td);
+                    });
+                    table.appendChild(subHeaderRow);
+    
+                    shouldPrintHeader = true;
+                }
+    
+                // Loop through grouped data and create rows
+                Object.keys(groupedData).forEach(year => {
+                    const yearData = groupedData[year];
+    
+                    const datman1Value = yearData.datman1 ? yearData.datman1.value.toFixed(0) : 'N/A';
+                    const datman1Timestamp = yearData.datman1 ? yearData.datman1.entry.timestamp : 'N/A';
+    
+                    const valueSpan1 = document.createElement('span');
+                    valueSpan1.classList.toggle('blinking-text', datman1Value === 'N/A');
+                    valueSpan1.textContent = datman1Value;
+    
+                    const cells = [year, valueSpan1, datman1Timestamp];
+    
+                    const createDataRow = (cells) => {
+                        const dataRow = document.createElement('tr');
+                        cells.forEach(cellValue => {
+                            const cell = document.createElement('td');
+                            if (cellValue instanceof HTMLElement) {
+                                cell.appendChild(cellValue);
+                            } else {
+                                cell.textContent = cellValue;
+                            }
+                            dataRow.appendChild(cell);
+                        });
+                        table.appendChild(dataRow);
+                    };
+    
+                    createDataRow(cells);
+                });
+            });
+        });
+    
+        return table;
+    }     
 });
