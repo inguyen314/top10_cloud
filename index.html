@@ -2,22 +2,31 @@
 <html lang="en">
 <!-- Setup url parameters -->
 <script>
-    // Create a URL object with the current page URL
     const urlParams = new URLSearchParams(window.location.search);
 
     var office = urlParams.get('office') || 'MVS';
     console.log('office: ', office);
 
-    // Calculate the document root
-    const documentRoot = window.location.protocol + "//" + window.location.host + "/";
-
-    // Determine the default value of cda based on documentRoot
-    const cdaDefault = (documentRoot === `https://wm.${office.toLocaleLowerCase()}.ds.usace.army.mil/`) ? "internal" : "public";
-    // console.log("cdaDefault: ", cdaDefault);
-
-    // Get the value of a specific parameter
-    var cda = urlParams.get('cda') || cdaDefault;
+    var cda = urlParams.get('cda');
     console.log('cda: ', cda);
+
+    const documentRoot = window.location.protocol + "//" + window.location.host + "/";
+    console.log("documentRoot: ", documentRoot);
+
+    let cdaDefault = null;
+    if (documentRoot === `https://wm.${office.toLocaleLowerCase()}.ds.usace.army.mil/` || `http://localhost:5173/` || `https://wm.rsgis.dev/` || `https://wm-${office.toLocaleLowerCase()}coop.mvk.ds.usace.army.mil/`) {
+        cdaDefault = "internal";
+    } else if (documentRoot === `https://wm-${office.toLocaleLowerCase()}coop.mvk.ds.usace.army.mil/`) {
+        cdaDefault = "internal-coop";
+    } else {
+        cdaDefault = "public";
+    }
+    console.log("cdaDefault: ", cdaDefault);
+
+    if (cda === null) {
+        cda = cdaDefault;
+    }
+    console.log("cda: ", cda);
 
     var type = urlParams.get('type') || null;
     console.log('type: ', type);
@@ -62,10 +71,10 @@
     <link rel="stylesheet" href="css/sidebar.css" />
     <link rel="stylesheet" href="css/style.css" />
     <script src="js/main.js"></script>
-    <script src="js/moment.min.js"></script>
-    <script src="js/moment-timezone-with-data.js"></script>
-    <script src="js/chart.js"></script>
-    <script src="js/chartjs-adapter-moment.min.js"></script>
+    <script src="js/libraries/moment.min.js"></script>
+    <script src="js/libraries/moment-timezone-with-data.js"></script>
+    <script src="js/libraries/chart.js"></script>
+    <script src="js/libraries/chartjs-adapter-moment.min.js"></script>
     <style>
         table {
             width: 100%;
@@ -179,26 +188,11 @@
 
                             <div class="box-content" style="background-color:white;margin:auto">
                                 <div class="content">
-                                    <!-- <table id="data-table">
-                                        <thead>
-                                            <tr>
-                                                <th>TSID</th>
-                                                <th>Timestamp</th>
-                                                <th>Por Max Value</th>
-                                                <th>Quality Code</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            
-                                        </tbody>
-                                    </table> -->
-
                                     <div id="loading_top10" style="display: none;"><img src="images/loading4.gif"
                                             style='height: 50px; width: 50px;' alt="Loading..." /></div>
                                     <div id="table_container_top10_sorted"></div>
                                     <div id="table_container_top10"></div>
-                                    <!-- <div id="table_container_top10_sorted"></div> -->
-                                    <script src='top10.js'></script>
+                                    <script src='js/top10.js'></script>
                                     <p>The "Top 10" table provides a sorted view of the highest values recorded for each
                                         location based on yearly data, which includes all data points collected within a
                                         specific year. The data is grouped by year and analyzed to determine the single
