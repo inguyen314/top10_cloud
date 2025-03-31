@@ -55,16 +55,15 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     let setBaseUrl = null;
     if (cda === "internal") {
-        setBaseUrl = `https://wm.${office.toLowerCase()}.ds.usace.army.mil:8243/${office.toLowerCase()}-data/`;
-        // console.log("setBaseUrl: ", setBaseUrl);
+        setBaseUrl = `https://wm.${office.toLowerCase()}.ds.usace.army.mil/${office.toLowerCase()}-data/`;
     } else if (cda === "public") {
         setBaseUrl = `https://cwms-data.usace.army.mil/cwms-data/`;
-        // console.log("setBaseUrl: ", setBaseUrl);
     }
+    console.log("setBaseUrl: ", setBaseUrl);
 
     // Define the URL to fetch location groups based on category
-    const categoryApiUrl = setBaseUrl + `location/group?office=${office}&include-assigned=false&location-category-like=${setLocationCategory}`;
-    // console.log("categoryApiUrl: ", categoryApiUrl);
+    const categoryApiUrl = setBaseUrl + `location/group?office=${office}&group-office-id=${office}&category-office-id=${office}&category-id=${setLocationCategory}`;
+    console.log("categoryApiUrl: ", categoryApiUrl);
 
     // Initialize maps to store metadata and time-series ID (TSID) data for various parameters
     const ownerMap = new Map();
